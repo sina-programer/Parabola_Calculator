@@ -5,58 +5,92 @@ import numpy as np
 import os
 
 class Input:
-    errors = {'empty':'Empty', 'int':'Not integer'}
+    __errors = {'empty':'Empty', 'int':'Not integer'}
     def __init__(self, master, x, y, txt):
         self.access = False
+        self.__x = x
+        self.__y = y
         
-        self.label = Label(master , text=txt)
-        self.label.place(x=x , y=y)
+        self.__label = Label(master, text=txt)
+        self.__label.place(x=self.__x, y=self.__y)
 
-        self.entry = Entry(master , width=15)
-        self.entry.place(x=x+20 , y=y+2)
-        self.entry.bind('<Enter>', lambda _: self.hover())
-        self.entry.bind('<Leave>', lambda _: self.leave())
-        
-        self.state = Label(master , text='', fg='red')
-        self.state.place(x=x+125 , y=y)    
+        self.__entry = Entry(master, width=15, bd=2)
+        self.__entry.place(x=self.__x+20, y=self.__y+2)
+        self.__entry.bind('<Enter>', self.__hover)
+        self.__entry.bind('<Leave>', self.__leave)
+
+        self.__state = Label(master, fg='red')
+        self.__state.place(x=self.__x+125, y=self.__y)    
         
     def check(self):
-        value = self.entry.get()
+        value = self.__entry.get()
         
-        if not value:
-            self.state.config(text=self.errors['empty'])
+        if not value.strip():
+            self.__state.config(text=self.__errors['empty'])
             self.access = False
             
         else:
             try:
                 value = eval(value)
+                assert isinstance(value, int) or isinstance(value, float)
                 self.insert(value)
-                self.state.config(text='')
+                self.__state.config(text='')
                 self.access = True
                 
             except:
-                self.state.config(text=self.errors['int'])
+                self.__state.config(text=self.__errors['int'])
                 self.access = False
+        
+    def __hover(self, event):
+        self.__entry.config(bd=4)
+        self.__entry.place(x=self.__x+20, y=self.__y)
+        self.__label.config(width=3)
+        
+    def __leave(self, event):
+        self.__entry.config(bd=2)
+        self.__entry.place(x=self.__x+20, y=self.__y+2)
+        self.__label.config(width=2)
                 
     def insert(self, txt):
-        self.entry.delete(0, 'end')
-        self.entry.insert(0, txt)
-
-    def hover(self):
-        self.entry.config(bd=4)
-        self.label.config(width=3)
+        self.__entry.delete(0, 'end')
+        self.__entry.insert(0, txt)
         
-    def leave(self):
-        self.entry.config(bd=1)
-        self.label.config(width=2)
+    def get(self):
+        return self.__entry.get()
+        
+    def clear(self):
+        self.__entry.delete(0, 'end')
 
-                
+
+class Btn:
+    __h_color = '#DBDBDB'
+    __l_color = '#F0F0F0'
+    def __init__(self, master, text, width, x, y, func, state='normal'):
+        self.__state = state
+        
+        self.__btn = Button(master, text=text, width=width, bd=2, state=self.__state, command=func)
+        self.__btn.place(x=x, y=y)
+        self.__btn.bind('<Enter>', self.__hover)
+        self.__btn.bind('<Leave>', self.__leave)  
+        
+    def change_state(self, state):
+        self.__state = state
+        self.__btn.config(state=self.__state)
+        
+    def __hover(self, event):
+        if self.__state != 'disabled':
+            self.__btn.config(bg=self.__h_color)
+    
+    def __leave(self, event):
+        self.__btn.config(bg=self.__l_color)
+
+              
 class App:
     def __init__(self, master):
         self.window = master
         self.window.config(menu=self.init_menu()) 
-        self.window.bind('<Return>', self.submit)
-        self.window.bind('<Escape>', self.escape)
+        self.window.bind('<Return>', lambda _: self.submit())
+        self.window.bind('<Escape>', lambda _: self.escape())
         
         self.steps = ' You have not been active yet '
 
@@ -64,22 +98,15 @@ class App:
         self.b = Input(self.window, 16, 60, 'b :')
         self.c = Input(self.window, 16, 100, 'c :')
        
-        self.submit_button = Button(self.window, text="Submit", width=15, height=1, bd=2)
-        self.submit_button.place(x=20, y=140)
-        self.submit_button.bind("<Button>", self.submit)
-        self.submit_button.bind('<Enter>', lambda _: self.submit_button.config(bg='#DBDBDB'))
-        self.submit_button.bind('<Leave>', lambda _: self.submit_button.config(bg='#F0F0F0'))
-    
-        self.steps_button = Button(self.window, text="Steps", width=8, height=1, bd=2, state='disabled')
-        self.steps_button.place(x=145, y=140)
-        self.steps_button.bind("<Button>", lambda _: messagebox.showinfo('Steps', self.steps))
+        Btn(master, 'Submit', 15, 20, 140, self.submit) 
+        Btn(master, 'Steps', 8, 145, 140, lambda: messagebox.showinfo('Steps', self.steps), 'disabled')
         
-    def escape(self, event):
-        self.a.entry.delete(0, 'end')
-        self.b.entry.delete(0, 'end')
-        self.c.entry.delete(0, 'end')
+    def escape(self):
+        self.a.clear()
+        self.b.clear()
+        self.c.clear()
     
-    def submit(self, event):
+    def submit(self):
         self.a.check()
         self.b.check()
         self.c.check()
@@ -133,8 +160,15 @@ class App:
         return self.menu              
 
 
-help_msg = '''This program helps you to calculate parabolas
-Just fill fields and submit it!'''
+help_msg = '''This program helps you to calculate parabola's
+Just fill the fields and submit it!
+
+Parameters:
+y = ax² + bx + c
+
+Shortcuts
+<Return> Calculate your parabola
+<Esc>        Clear all fields'''
 
 about_msg = '''This program made by Sina.f\n
 GitHub: sina-programer
