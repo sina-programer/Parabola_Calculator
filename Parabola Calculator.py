@@ -1,20 +1,23 @@
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
+from tkinter import messagebox
 from tkinter import *
 import numpy as np
 import os
 
 class Input:
     errors = {'empty':'Empty', 'int':'Not integer'}
-    def __init__(self, master, x, y, txt_lab):
+    def __init__(self, master, x, y, txt):
         self.access = False
         
-        self.label = Label(master , text=txt_lab)
+        self.label = Label(master , text=txt)
         self.label.place(x=x , y=y)
 
         self.entry = Entry(master , width=15)
         self.entry.place(x=x+20 , y=y+2)
-
-        self.state = Label(master , text="", fg='red')
+        self.entry.bind('<Enter>', lambda _: self.hover())
+        self.entry.bind('<Leave>', lambda _: self.leave())
+        
+        self.state = Label(master , text='', fg='red')
         self.state.place(x=x+125 , y=y)    
         
     def check(self):
@@ -39,6 +42,14 @@ class Input:
         self.entry.delete(0, 'end')
         self.entry.insert(0, txt)
 
+    def hover(self):
+        self.entry.config(bd=4)
+        self.label.config(width=3)
+        
+    def leave(self):
+        self.entry.config(bd=1)
+        self.label.config(width=2)
+
                 
 class App:
     def __init__(self, master):
@@ -56,7 +67,9 @@ class App:
         self.submit_button = Button(self.window, text="Submit", width=15, height=1, bd=2)
         self.submit_button.place(x=20, y=140)
         self.submit_button.bind("<Button>", self.submit)
- 
+        self.submit_button.bind('<Enter>', lambda _: self.submit_button.config(bg='#DBDBDB'))
+        self.submit_button.bind('<Leave>', lambda _: self.submit_button.config(bg='#F0F0F0'))
+    
         self.steps_button = Button(self.window, text="Steps", width=8, height=1, bd=2, state='disabled')
         self.steps_button.place(x=145, y=140)
         self.steps_button.bind("<Button>", lambda _: messagebox.showinfo('Steps', self.steps))
