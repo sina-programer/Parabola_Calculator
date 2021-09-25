@@ -1,32 +1,36 @@
-import matplotlib.pyplot as plt
-from tkinter import messagebox
 from tkinter import *
+from tkinter import messagebox
+import matplotlib.pyplot as plt
 import numpy as np
+import webbrowser
 import os
 
 class Input:
     __errors = {'empty':'Empty', 'int':'Not integer'}
-    def __init__(self, master, x, y, txt):
+    def __init__(self, master, x, y, txt, width=15):
         self.access = False
         self.__x = x
         self.__y = y
         
+        self.__variable = StringVar()
+        self.__variable.trace('w', lambda *args: self.check())
+        
         self.__label = Label(master, text=txt)
         self.__label.place(x=self.__x, y=self.__y)
 
-        self.__entry = Entry(master, width=15, bd=2)
+        self.__entry = Entry(master, width=width, bd=2, textvariable=self.__variable)
         self.__entry.place(x=self.__x+20, y=self.__y+2)
         self.__entry.bind('<Enter>', self.__hover)
         self.__entry.bind('<Leave>', self.__leave)
 
-        self.__state = Label(master, fg='red')
+        self.__state = Label(master)
         self.__state.place(x=self.__x+125, y=self.__y)    
         
     def check(self):
-        value = self.__entry.get()
+        value = self.__variable.get()
         
         if not value.strip():
-            self.__state.config(text=self.__errors['empty'])
+            self.__state.config(text=self.__errors['empty'], fg='red')
             self.access = False
             
         else:
@@ -34,11 +38,11 @@ class Input:
                 value = eval(value)
                 assert isinstance(value, int) or isinstance(value, float)
                 self.insert(value)
-                self.__state.config(text='')
+                self.__state.config(text='Ok', fg='green')
                 self.access = True
                 
             except:
-                self.__state.config(text=self.__errors['int'])
+                self.__state.config(text=self.__errors['int'], fg='red')
                 self.access = False
         
     def __hover(self, event):
@@ -52,15 +56,13 @@ class Input:
         self.__label.config(width=2)
                 
     def insert(self, txt):
-        self.__entry.delete(0, 'end')
-        self.__entry.insert(0, txt)
+        self.__variable.set(txt)
         
     def get(self):
-        return self.__entry.get()
+        return self.__variable.get()
         
     def clear(self):
-        self.__entry.delete(0, 'end')
-
+        self.__variable.set('')
 
 class Btn:
     __h_color = '#DBDBDB'
@@ -87,77 +89,84 @@ class Btn:
               
 class App:
     def __init__(self, master):
-        self.window = master
-        self.window.config(menu=self.init_menu()) 
-        self.window.bind('<Return>', lambda _: self.submit())
-        self.window.bind('<Escape>', lambda _: self.escape())
+        master.config(menu=self.init_menu(master)) 
+        master.bind('<Return>', lambda _: self.submit())
+        master.bind('<Escape>', lambda _: self.clear())
         
         self.steps = ' You have not been active yet '
 
-        self.a = Input(self.window, 16, 20, 'a :')
-        self.b = Input(self.window, 16, 60, 'b :')
-        self.c = Input(self.window, 16, 100, 'c :')
+        self.a = Input(master, 16, 20, 'a :')
+        self.b = Input(master, 16, 60, 'b :')
+        self.c = Input(master, 16, 100, 'c :')
        
-        Btn(master, 'Submit', 15, 20, 140, self.submit) 
-        Btn(master, 'Steps', 8, 145, 140, lambda: messagebox.showinfo('Steps', self.steps), 'disabled')
+        Btn(master, 'Submit', 25, 20, 140, self.submit) 
+ 
+    def submit(self):
+        if self.a.access and self.b.access and self.c.access:   
+            if eval(self.a.get())!=0:
+                a = eval(self.a.get())
+                b = eval(self.b.get())
+                c = eval(self.c.get())
+                self.formul = lambda x: a*(x**2) + b*x + c
+                x = -b/(a*2)
+                y = self.formul(x)
+                xs = np.arange(x-3, x+3.1, 0.1)
+                ys = list(map(self.formul, xs))
+                    
+                self.show_steps(a, b, c, x, y)
+                plt.plot(xs, ys)
+                plt.show()
+                
+            else:
+                messagebox.showwarning("Parabola or Line?","Your parabola is a line!")
+        else:
+            messagebox.showwarning('ERROR', 'Not Complete')
+
+    def show_steps(self, a, b, c, x, y):                
+        xs = np.arange(x-2, x+2.1, 1)
+        ys = list(map(self.formul, xs))
+
+        self.steps = f''' 
+X = -{b} / 2*{a} =  {x:.4f}
+Y = {a}X² + {b}X + {c} =  {y:.4f}
+
+X : {xs[0]:.3f} ,  {xs[1]:.3f} ,  {xs[2]:.3f} ,  {xs[3]:.3f} ,  {xs[4]:.3f}
+                                  ˅
+Y :  {ys[0]:.3f} ,  {ys[1]:.3f} ,  {ys[2]:.3f} ,  {ys[3]:.3f} ,  {ys[4]:.3f}
+'''
+
+        messagebox.showinfo('Steps', self.steps)
         
-    def escape(self):
+    def clear(self):
         self.a.clear()
         self.b.clear()
         self.c.clear()
     
-    def submit(self):
-        self.a.check()
-        self.b.check()
-        self.c.check()
+    def show_about(self):
+        dialog = Tk()
+        dialog.title('About us')
+        dialog.geometry('300x100+550+350')
+        dialog.resizable(False, False)
+        if os.path.exists(icon):
+            dialog.iconbitmap(icon)
+        dialog.focus_force()
         
-        if self.a.access and self.b.access and self.c.access:   
-            if eval(self.a.entry.get())!=0:
-                a = eval(self.a.entry.get())
-                b = eval(self.b.entry.get())
-                c = eval(self.c.entry.get())
-                x = -b/(2*a)
-                x = np.arange(x-3 , x+3.1 , 0.1)
-                y = list(map(lambda x: a*(x**2)+(b*x)+c , x))
-                
-                if a>0:
-                    messagebox.showinfo("a > 0","Your parabola is up")
-                    
-                else:
-                    messagebox.showinfo("a < 0","Your parabola is down")
-                    
-                self.steps_button.config(state='normal')
-                self.show_steps()
-                plt.plot(x,y)
-                plt.show()
-                messagebox.showinfo('Steps', self.steps)
-                
-            else:
-                messagebox.showinfo("a = 0","Your parabola is a line!")
-        else:
-            messagebox.showwarning('ERROR', 'Not Complete')
-
-    def show_steps(self):
-        a = eval(self.a.entry.get())
-        b = eval(self.b.entry.get())
-        c = eval(self.c.entry.get())
-        x = eval('-b/(2*a)')
-
-        self.x = f'-{b} / 2*{a} =  {x}'
-        self.y = f'{a}X² + {b}X + {c}'
-        y = f"{eval('a*x**2')} + {eval('b*x')} + {c}"
-        self.steps = f'''Steps:   
-            
-1_  X = {self.x} 
-2_  Y = {self.y}
-3_  Y = {y}'''
-
-    def init_menu(self):
-        self.menu = Menu(self.window)  
-        self.menu.add_command(label="Help", command=lambda: messagebox.showinfo('Help', help_msg))  
-        self.menu.add_command(label="About us", command=lambda: messagebox.showinfo('About us', about_msg))  
+        print('\a')
+        Label(dialog, text='This program made by Sina.f').pack(pady=12)
         
-        return self.menu              
+        Button(dialog, text='GitHub', width=8, command=lambda: webbrowser.open('https://github.com/sina-programer')).place(x=30, y=50)
+        Button(dialog, text='Instagram', width=8, command=lambda: webbrowser.open('https://www.instagram.com/sina.programer')).place(x=120, y=50)
+        Button(dialog, text='Telegram', width=8, command=lambda: webbrowser.open('https://t.me/sina_programer')).place(x=210, y=50)
+        
+        dialog.mainloop()
+
+    def init_menu(self, master):
+        menu = Menu(master)  
+        menu.add_command(label='Steps', command=lambda: messagebox.showinfo('Steps', self.steps))
+        menu.add_command(label="Help", command=lambda: messagebox.showinfo('Help', help_msg))  
+        menu.add_command(label="About us", command=self.show_about)  
+        
+        return menu              
 
 
 help_msg = '''This program helps you to calculate parabola's
@@ -170,11 +179,6 @@ Shortcuts
 <Return> Calculate your parabola
 <Esc>        Clear all fields'''
 
-about_msg = '''This program made by Sina.f\n
-GitHub: sina-programer
-Telegram: sina_programer
-Instagram: sina.programer'''
-
 icon = r'Files\icon.ico'
 
 if __name__ == '__main__':
@@ -182,6 +186,7 @@ if __name__ == '__main__':
     root.title('Parabola Calculator')
     root.geometry('220x180+550+300')
     root.resizable(False, False)  
+    root.focus_force()
     
     if os.path.exists(icon):
         root.geometry('220x200+550+300')
