@@ -54,12 +54,12 @@ class Input:
         self.__entry.config(bd=2)
         self.__entry.place(x=self.__x+20, y=self.__y+2)
         self.__label.config(width=2)
-                
-    def insert(self, txt):
-        self.__variable.set(txt)
         
     def get(self):
         return self.__variable.get()
+                
+    def insert(self, txt):
+        self.__variable.set(txt)
         
     def clear(self):
         self.__variable.set('')
@@ -93,38 +93,48 @@ class App:
         master.bind('<Return>', lambda _: self.submit())
         master.bind('<Escape>', lambda _: self.clear())
         
+        self.formula = None
         self.steps = ' You have not been active yet '
-
         self.a = Input(master, 16, 20, 'a :')
         self.b = Input(master, 16, 60, 'b :')
         self.c = Input(master, 16, 100, 'c :')
-       
+        self.x = Input(master, 140, 175, 'x: ', width=7)
+        
         Btn(master, 'Submit', 25, 20, 140, self.submit) 
- 
+        self.find_btn = Btn(master, "Show 'y' for any 'x'", 15, 20, 175, self.show_y, state='disabled')
+        
     def submit(self):
         if self.a.access and self.b.access and self.c.access:   
             if eval(self.a.get())!=0:
                 a = eval(self.a.get())
                 b = eval(self.b.get())
                 c = eval(self.c.get())
-                self.formul = lambda x: a*(x**2) + b*x + c
+                self.formula = lambda x: a*(x**2) + b*x + c
                 x = -b/(a*2)
-                y = self.formul(x)
-                xs = np.arange(x-3, x+3.1, 0.1)
-                ys = list(map(self.formul, xs))
+                y = self.formula(x)
                     
+                self.find_btn.change_state('normal')
                 self.show_steps(a, b, c, x, y)
-                plt.plot(xs, ys)
-                plt.show()
+                self.show_plot(x, y)
                 
             else:
                 messagebox.showwarning("Parabola or Line?","Your parabola is a line!")
         else:
-            messagebox.showwarning('ERROR', 'Not Complete')
+            messagebox.showwarning('ERROR', 'Not Complete!')
+        
+    def show_y(self):
+        if self.x.access:
+            x = eval(self.x.get())
+            y = self.formula(x)
+            self.x.insert(x)
+            messagebox.showinfo('Show y', f"'y' for {x}: {y:.3f}")
+                
+        else:
+            messagebox.showwarning('ERROR', 'Please enter a valid number!')
 
     def show_steps(self, a, b, c, x, y):                
         xs = np.arange(x-2, x+2.1, 1)
-        ys = list(map(self.formul, xs))
+        ys = list(map(self.formula, xs))
 
         self.steps = f''' 
 X = -{b} / 2*{a} =  {x:.4f}
@@ -136,11 +146,20 @@ Y :  {ys[0]:.3f} ,  {ys[1]:.3f} ,  {ys[2]:.3f} ,  {ys[3]:.3f} ,  {ys[4]:.3f}
 '''
 
         messagebox.showinfo('Steps', self.steps)
+                
+    def show_plot(self, x, y):
+        xs = np.arange(x-3, x+3.1, 0.1)
+        ys = list(map(self.formula, xs))
+        
+        plt.plot(xs, ys)
+        plt.grid()
+        plt.show()
         
     def clear(self):
         self.a.clear()
         self.b.clear()
         self.c.clear()
+        self.x.clear()
     
     def show_about(self):
         dialog = Tk()
@@ -153,7 +172,6 @@ Y :  {ys[0]:.3f} ,  {ys[1]:.3f} ,  {ys[2]:.3f} ,  {ys[3]:.3f} ,  {ys[4]:.3f}
         
         print('\a')
         Label(dialog, text='This program made by Sina.f').pack(pady=12)
-        
         Button(dialog, text='GitHub', width=8, command=lambda: webbrowser.open('https://github.com/sina-programer')).place(x=30, y=50)
         Button(dialog, text='Instagram', width=8, command=lambda: webbrowser.open('https://www.instagram.com/sina.programer')).place(x=120, y=50)
         Button(dialog, text='Telegram', width=8, command=lambda: webbrowser.open('https://t.me/sina_programer')).place(x=210, y=50)
@@ -184,12 +202,12 @@ icon = r'Files\icon.ico'
 if __name__ == '__main__':
     root = Tk()
     root.title('Parabola Calculator')
-    root.geometry('220x180+550+300')
+    root.geometry('220x210+550+300')
     root.resizable(False, False)  
     root.focus_force()
     
     if os.path.exists(icon):
-        root.geometry('220x200+550+300')
+        root.geometry('220x230+550+300')
         root.iconbitmap(icon)
     
     app = App(root)
