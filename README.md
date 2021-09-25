@@ -6,7 +6,6 @@
   - [Requirements](#requirements)
   - [Preview](#preview)
   - [Credits](#credits)
-  - [Version](#version)
 - [Reach Me](#reach-me)
 - [See Also](#see-also)
 
@@ -28,9 +27,6 @@ then the program calculate the parabola and show calculate steps and result and 
 
 ### **Credits:**
 - Icon made by [icons8](https://icons8.com/)
-
-### **Version:**
-- v1.1
 
 ## **Reach Me:**
 - [sina_programer](https://t.me/sina_programer) in telegram
