@@ -12,7 +12,7 @@
 
 ## **About the Program:**
 You specify the a, b, c parameters in this formula  `y = ax²  + bx + c` <br>
-then the program calculate the parabola and show calculate steps and result and finally show the parabola graphically for you
+then the program calculate the parabola and show calculate steps and result and finally show the parabola graphically
 
 ### **Features:**
 - Show calculate steps for you whenever you want
