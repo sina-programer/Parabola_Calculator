@@ -16,6 +16,7 @@ then the program calculate the parabola and show calculate steps and result and 
 ### **Features:**
 - Show calculate steps for you whenever you want
 - Finally, show the parabola graphically
+- Show 'y' for any 'x'
 - Handling bad inputs
 
 ### Requirements:
